@@ -1,0 +1,155 @@
+﻿@{
+    ViewBag.Title = "Movies";
+}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<style>
+    .clshome {
+        width: 500px;
+        margin-right: auto;
+        margin-left: auto;
+        margin-top: 59px;
+    }
+
+    .clsMovie {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+        margin-top: 50px;
+        border: double;
+    }
+
+    .clsList {
+        width: 700px;
+        margin-right: auto;
+        margin-left: auto;
+        margin-top: 50px;
+    }
+</style>
+<div class="clshome">
+    <label>Movie Name</label>
+    <input type="text" placeholder="Search Movies" id="txtMoviveName">
+    <input type="button" id="btnMovie" value="Search Movie" onclick="Searchmovies()" />
+    <br/><br/>
+    <p id="information" style="color:red;font-size: 16px;display:none;">**If you want to access  any movie in that below mentioned list,Give the full name in movie name and search again</p>
+</div>
+<div id="Access" style="width: 500px;margin-right: auto;margin-left: auto;margin-top:10px;display: none;" >
+    <label style="margin-right:15px;" for="Moviews">Search By</label>
+    <select style="width:178px;height:25px;" name="SearchBy" id="SearchBy">
+        <option value="ALL">ALL</option>
+        <option value="original_title">Original Title</option>
+        <option value="popularity">Popularity</option>
+        <option value="release_date">Release Date</option>
+        <option value="revenue">Revenue</option>
+        <option value="runtime">Runtime</option>
+        <option value="title">Title</option>
+        <option value="status">Status</option>
+        <option value="tagline">Tagline</option>
+        <option value="vote_average">Vote Average</option>
+        <option value="vote_count">Vote Count</option>
+        <option value="genres">Genres</option>
+        <option value="spoken_languages">Spoken Languages</option>
+        <option value="production_companies">Production Companies</option>
+        <option value="production_countries">Production Countries</option>
+        <option value="reviews">Reviews</option>
+        <option value="release_dates">Release Dates</option>
+        <option value="alternative_titles">Alternative Titles</option>
+        <option value="translations">Translations</option>
+    </select>
+    <input type="button" id="btnAccessing" value="OK" onclick="AccessingMovies()" style="display: none;" />
+</div>
+<div class="clsMovie" id="MovieList" style="display: none;"></div>
+<div class="clsList" id="AccessingDetails" style="display: none;"></div>
+
+
+
+<script type="text/javascript">
+    var MovieID = '';
+    function Searchmovies() {
+        debugger;
+        if ($('#txtMoviveName').val() == null || $('#txtMoviveName').val() == "") {
+            alert("Please enter Movie Name");
+            return;
+        }
+        var MovieParam = {
+            MovieName: $('#txtMoviveName').val()
+        };
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("MoviesDetails", "Movies")",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(MovieParam),
+            dataType: "json",
+            success: function (data) {
+                debugger;
+                if (data.Result.Status.ResultCode == "1") {
+                    var s = '';
+                    var MoviesDetails = data.Result.MoviesList;
+                    if (MoviesDetails.length == 1) {
+                        MovieID = MoviesDetails[0].split('|')[1];
+                        $('#btnAccessing').show();
+                        $('#MovieList').hide();
+                        $('#Access').show();
+                        $('#AccessingDetails').hide();
+                        $('#information').hide();
+                    }
+                    else {
+                        s = '<ul>'
+                        for (var k = 0; k < MoviesDetails.length; k++) {
+                            s += '<li>' + MoviesDetails[k].split('|')[0] + '</li>';
+                        }
+                        s += '<ul>'
+                        $('#MovieList').html(s);
+                        $('#MovieList').show();
+                        $('#btnAccessing').hide();
+                        $('#Access').hide();
+                        $('#AccessingDetails').hide();
+                        
+                        $('#information').show();
+                    }
+                }
+                else if (data.Result.Status.ResultCode == "0") {
+                    var s = '<ul>' + data.Result.Status.ErrorMessage + '</ul>';
+                    $('#MovieList').html(s);
+                    $('#MovieList').show();
+                    
+                }
+            },
+            error: function (ex) {
+                alert('Problem Occured While Processing');
+            }
+        });
+    };
+    function AccessingMovies() {
+        debugger;
+        if ($('#txtMoviveName').val() == null || $('#txtMoviveName').val() == "") {
+            alert("Please enter Movie Name");
+            return;
+        }
+        var SearchBy=$('#SearchBy').val();
+        var ID_Param = {
+            MovieID: MovieID,
+            Type: SearchBy
+        };
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("AccessingDetails", "Movies")",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(ID_Param),
+            dataType: "json",
+            success: function (data) {
+                debugger;
+                var s = data.Result.ErrorMessage;
+                $('#AccessingDetails').html(s);
+                $('#Access').show();
+                $('#AccessingDetails').show();
+                
+
+            },
+            error: function (ex) {
+                alert('Problem Occured While Processing');
+            }
+        });
+    };
+</script>
